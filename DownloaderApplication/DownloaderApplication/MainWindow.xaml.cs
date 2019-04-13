@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Windows;
 
 
@@ -17,10 +18,13 @@ namespace DownloaderApplication
             InitializeComponent();
         }
 
+        System.Threading.CancellationTokenSource ctsForDownload;
         private async void DownloadUri_Click(object sender, RoutedEventArgs e)
         {
             try
-            {              
+            {
+                DownloadCancel.IsEnabled = true;
+              
 
                 Uri address = new Uri(TextUri.Text);
                 string[] ar = address.Segments;
@@ -32,6 +36,13 @@ namespace DownloaderApplication
                 string newFile = folderPath + @"\" + ar[ar.Length - 1];
                 using (WebClient client = new WebClient())
                 {
+                    DownloadUri.IsEnabled = false;
+                    ctsForDownload = new CancellationTokenSource();
+                    ctsForDownload.Token.Register(() =>
+                    {                       
+                        client.CancelAsync();
+                       
+                    });
                     client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgresBarr_ValueChanged);
 
                     client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
@@ -54,6 +65,15 @@ namespace DownloaderApplication
             {
                 throw;
             }
+
+
+            finally
+            {
+                DownloadUri.IsEnabled = true;
+                DownloadCancel.IsEnabled= false;
+                ProgresBarr.Value = 0;
+            }
+
         }
         
         private void ProgresBarr_ValueChanged(object sender, DownloadProgressChangedEventArgs e )
@@ -64,12 +84,16 @@ namespace DownloaderApplication
             ProgresBarr.Value = int.Parse(Math.Truncate(percentage).ToString());
         }
 
-
         void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
             MessageBox.Show("Download Completed");
 
         }
-
+        private void DownloadCancel_Click(object sender, RoutedEventArgs e)
+        {
+            DownloadCancel.IsEnabled = false;
+            ctsForDownload.Cancel();
+            ctsForDownload.Dispose();
+        }
     }
 }
