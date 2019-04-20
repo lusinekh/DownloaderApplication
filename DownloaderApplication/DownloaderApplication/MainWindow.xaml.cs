@@ -5,7 +5,6 @@ using System.Net;
 using System.Threading;
 using System.Windows;
 
-
 namespace DownloaderApplication
 {
     /// <summary>
@@ -47,8 +46,6 @@ namespace DownloaderApplication
                     string newFile = folderPath + @"\" + ar[ar.Length - 1];                   
 
                     client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgresBarr_ValueChanged);
-
-
                     client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
 
                     await client.DownloadFileTaskAsync(address, newFile);
